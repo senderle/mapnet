@@ -156,8 +156,8 @@ var forceNodes = function(force, graph) {
 
 var setGraphNodes = function(graph) { 
   for (var i = 0; i < graph.nodes.length; i++) {
-      graph.nodes[i].x = 500 + Math.sin(i) * 300;
-      graph.nodes[i].y = 300 + Math.cos(i) * 150;
+      graph.nodes[i].x = Math.sin(i) * 125;
+      graph.nodes[i].y = Math.cos(i * 2) * 300;
     }
 }; 
 
