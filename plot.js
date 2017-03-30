@@ -31,28 +31,15 @@ var setRectangleAttributes = function(svg_graph, width, height) {
                   .attr("id", "graph-background");
 }; 
 
-var resize = function(width, svg, rect) {
-  var width = window.innerWidth, height = window.innerHeight;
-  svg.attr("width", width - 20)
-     .attr("height", height - 20);
-  rect.attr("width", width - 20)
-      .attr("height", height - 20);
-}; 
-
-var onResize = function(window) { 
-  d3.select(window)
-    .on("resize", resize); 
-};
-
 function appendTopicLabel(node, opacity) {
-    label = node.append("text")
-                .attr("class", "topic-click-label")
-                .attr("font-size", 10 + 'px')
-                .attr("x", 10 + 'px')
-                .attr("dy", ".35em")
-                .attr("opacity", opacity)
-                .text(function(d) { return d.name });
-    return label
+    var label = node.append("text")
+                    .attr("class", "topic-click-label")
+                    .attr("font-size", 10 + 'px')
+                    .attr("x", 10 + 'px')
+                    .attr("dy", ".35em")
+                    .attr("opacity", opacity)
+                    .text(function(d) { return d.name; });
+    return label;
 }
 
 var circleClick = function(node, node_r) {
@@ -95,21 +82,25 @@ var setUndernode = function(vis, graph) {
 
 var checkIfGraphIsDirected = function(graph, linkArc, linkLine) { 
   if (graph.directed) {
-    linkPath = linkArc
+    linkPath = linkArc;
   } else {
-    linkPath = linkLine
+    linkPath = linkLine;
   }
 };
 
-var setLink = function(vis, graph, node_r) { 
+var setLink = function(vis, minWeight, maxWeight, node_r, graph) { 
+  var setWeight = function(d) {
+    var weight = d.weight;
+    weight = weight > minWeight ? weight : minWeight;
+    return weight / maxWeight;
+  };
+
   return vis.selectAll(".link")
             .data(graph.links)
             .enter()
             .append("path")
             .attr("class", "link")
-            .attr("opacity", function(d) { 
-              return d.weight / maxWeight; 
-            })
+            .attr("opacity", setWeight)
             .attr("stroke-width", node_r / 6);
 }; 
 
@@ -128,14 +119,14 @@ var setMaxWeight = function(graph, maxOpacity) {
   return Math.max.apply(null, graph.links.map(function(d) { return d.weight; })) / maxOpacity;
 }; 
 
-setIdLabel = function(node_r, undernode) { 
+var setIdLabel = function(node_r, undernode) { 
   undernode.append("text")
            .attr("class", "id-label")
            .attr("font-size", node_r)
            .attr("text-anchor", "middle")
            .attr("dy", ".35em")
            .text(function(d) { 
-              return d.id 
+              return d.id;
             });
 };
 
@@ -156,14 +147,15 @@ var setNode = function(vis, graph) {
             .attr("class", "node");
 }; 
 
-var setJson = function(force, maxOpacity, vis, node_r) { 
+var setJson = function(force, minOpacity, maxOpacity, vis, node_r) { 
   d3.json("graph.json", function(error, graph) {
     setGraphNodes(graph);
     forceNodes(force, graph);    
 
-    maxWeight = setMaxWeight(graph, maxOpacity);
+    var maxWeight = setMaxWeight(graph, maxOpacity);
+    var minWeight = minOpacity * maxWeight;
 
-    var link = setLink(vis, graph, node_r);
+    var link = setLink(vis, minWeight, maxWeight, node_r, graph);
 
     if (graph.directed) {
       link.attr("marker-end", "url(#end)");
@@ -173,7 +165,7 @@ var setJson = function(force, maxOpacity, vis, node_r) {
     var node = setNode(vis, graph);
     drawGraph(node, undernode, node_r); 
     appendTopicLabel(node, 1, node_r);
-    checkIfGraphIsDirected(graph, linkArc, linkLine)
+    checkIfGraphIsDirected(graph, linkArc, linkLine);
 
     function tick() {
       link.attr("d", linkPath);
@@ -191,35 +183,47 @@ var setJson = function(force, maxOpacity, vis, node_r) {
 }; 
 
 var selectableForceDirectedGraph = function() {
-  var node_r = 10;
-  var maxOpacity = 1;
+  // Graph styling:
+  var node_r = 10;          // Radius of nodes
+  var minOpacity = 0.25;    // Minimum opacity of edges
+  var maxOpacity = 0.9;     // Maximum opacity of edges
+
+  // Viewport settings and zooming:
   var width = window.innerWidth;
   var height = window.innerHeight;
-  var xScale = d3.scale.linear().domain([0,width]).range([0,width]);
-  var yScale = d3.scale.linear().domain([0,height]).range([0, height]);
-  var svg = setSVG(width, height);
-  var force = d3.layout.force().charge(-3000).gravity(0.65).linkDistance(20).size([width, height]);
-  var zoomer = d3.behavior.zoom().scaleExtent([0.1,10]).x(xScale).y(yScale).on("zoom", redraw);
-  var svg_graph = svg.append('svg:g').call(zoomer);
-  var rect = setRectangleAttributes(svg_graph, width, height);
-  var vis = svg_graph.append("svg:g");
+  var xScale = d3.scale.linear().domain([0, width]).range([0, width]);
+  var yScale = d3.scale.linear().domain([0, height]).range([0, height]);
 
-  appendSVG(svg);
-
-  function redraw() {
+  function redrawZoom() {
     vis.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
-  }; 
+  }
+  var zoomer = d3.behavior.zoom().scaleExtent([0.1, 10])
+        .x(xScale).y(yScale).on("zoom", redrawZoom);
 
+  // Layout settings:
+  var force = d3.layout.force()
+                       .charge(-10000)
+                       .gravity(0.2)
+                       .linkDistance(100)
+                       .size([width, height]);
+  
+  // Finally, specify the resize behavior:
   function resize() {
     var width = window.innerWidth, height = window.innerHeight;
     svg.attr("width", width - 20).attr("height", height - 20);
     rect.attr("width", width - 20).attr("height", height - 20);
-  }; 
-  
+  }
   d3.select(window).on("resize", resize); 
-
  
-  setJson(force, maxOpacity, vis, node_r);
+  // Now assemble the moving parts...
+  var svg = setSVG(width, height);
+  var svg_graph = svg.append('svg:g').call(zoomer);
+  var rect = setRectangleAttributes(svg_graph, width, height);
+  var vis = svg_graph.append("svg:g");
+  appendSVG(svg);
+
+  // And feed in the data and final settings.
+  setJson(force, minOpacity, maxOpacity, vis, node_r);
 
 }; 
 
