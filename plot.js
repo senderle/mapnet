@@ -1,7 +1,7 @@
 var selectableForceDirectedGraph = function() {
   // Graph styling:
   var node_r = 10;          // Radius of nodes
-  var minOpacity = 0.25;    // Minimum opacity of edges
+  var minOpacity = 0.1;    // Minimum opacity of edges
   var maxOpacity = 0.9;     // Maximum opacity of edges
 
   // Viewport settings:
