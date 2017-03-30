@@ -1,3 +1,49 @@
+var selectableForceDirectedGraph = function() {
+  // Graph styling:
+  var node_r = 10;          // Radius of nodes
+  var minOpacity = 0.25;    // Minimum opacity of edges
+  var maxOpacity = 0.9;     // Maximum opacity of edges
+
+  // Viewport settings:
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+
+  // Layout settings:
+  var force = d3.layout.force()
+                       .charge(-10000)
+                       .gravity(0.2)
+                       .linkDistance(100)
+                       .size([width, height]);
+  
+  var xScale = d3.scale.linear().domain([0, width]).range([0, width]);
+  var yScale = d3.scale.linear().domain([0, height]).range([0, height]);
+
+  function redrawZoom() {
+    vis.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
+  }
+  var zoomer = d3.behavior.zoom().scaleExtent([0.1, 10])
+        .x(xScale).y(yScale).on("zoom", redrawZoom);
+  
+  // Finally, specify the resize behavior:
+  function resize() {
+    var width = window.innerWidth, height = window.innerHeight;
+    svg.attr("width", width - 20).attr("height", height - 20);
+    rect.attr("width", width - 20).attr("height", height - 20);
+  }
+  d3.select(window).on("resize", resize); 
+ 
+  // Now assemble the moving parts...
+  var svg = setSVG(width, height);
+  var svg_graph = svg.append('svg:g').call(zoomer);
+  var rect = setRectangleAttributes(svg_graph, width, height);
+  var vis = svg_graph.append("svg:g");
+  appendSVG(svg);
+
+  // And feed in the data and final settings.
+  setJson(force, minOpacity, maxOpacity, vis, node_r);
+
+}; 
+
 var setSVG = function(width, height) { 
   return d3.select("#d3_selectable_force_directed_graph")
            .append("svg")
@@ -182,49 +228,5 @@ var setJson = function(force, minOpacity, maxOpacity, vis, node_r) {
   });
 }; 
 
-var selectableForceDirectedGraph = function() {
-  // Graph styling:
-  var node_r = 10;          // Radius of nodes
-  var minOpacity = 0.25;    // Minimum opacity of edges
-  var maxOpacity = 0.9;     // Maximum opacity of edges
-
-  // Viewport settings and zooming:
-  var width = window.innerWidth;
-  var height = window.innerHeight;
-  var xScale = d3.scale.linear().domain([0, width]).range([0, width]);
-  var yScale = d3.scale.linear().domain([0, height]).range([0, height]);
-
-  function redrawZoom() {
-    vis.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")");
-  }
-  var zoomer = d3.behavior.zoom().scaleExtent([0.1, 10])
-        .x(xScale).y(yScale).on("zoom", redrawZoom);
-
-  // Layout settings:
-  var force = d3.layout.force()
-                       .charge(-10000)
-                       .gravity(0.2)
-                       .linkDistance(100)
-                       .size([width, height]);
-  
-  // Finally, specify the resize behavior:
-  function resize() {
-    var width = window.innerWidth, height = window.innerHeight;
-    svg.attr("width", width - 20).attr("height", height - 20);
-    rect.attr("width", width - 20).attr("height", height - 20);
-  }
-  d3.select(window).on("resize", resize); 
- 
-  // Now assemble the moving parts...
-  var svg = setSVG(width, height);
-  var svg_graph = svg.append('svg:g').call(zoomer);
-  var rect = setRectangleAttributes(svg_graph, width, height);
-  var vis = svg_graph.append("svg:g");
-  appendSVG(svg);
-
-  // And feed in the data and final settings.
-  setJson(force, minOpacity, maxOpacity, vis, node_r);
-
-}; 
-
+// Make it so...
 selectableForceDirectedGraph();
