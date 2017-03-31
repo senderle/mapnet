@@ -81,7 +81,7 @@ function appendTopicLabel(node, opacity) {
     var label = node.append("text")
                     .attr("class", "topic-click-label")
                     .attr("font-size", 10 + 'px')
-                    .attr("x", 10 + 'px')
+                    .attr("x", 14 + 'px')
                     .attr("dy", ".35em")
                     .attr("opacity", opacity)
                     .text(function(d) { return d.name; });
@@ -197,6 +197,8 @@ var setJson = function(force, minOpacity, maxOpacity, vis, node_r) {
   data = window.location.hash;
   data = data ? data.slice(1) : "default";
   data = data.endsWith(".json") ? data : (data + ".json");
+  data = 'data/' + data;
+
   d3.json(data, function(error, graph) {
     setGraphNodes(graph);
     forceNodes(force, graph);    
