@@ -172,7 +172,7 @@ var setIdLabel = function(node_r, undernode) {
            .attr("text-anchor", "middle")
            .attr("dy", ".35em")
            .text(function(d) { 
-              return d.id;
+              return ''; // d.id;  // Restore d.id to display node id.
             });
 };
 
