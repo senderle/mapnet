@@ -197,7 +197,6 @@ var setJson = function(force, minOpacity, maxOpacity, vis, node_r) {
   data = window.location.hash;
   data = data ? data.slice(1) : "graph";
   data = data.endsWith(".json") ? data : (data + ".json");
-  console.log(data);
   d3.json(data, function(error, graph) {
     setGraphNodes(graph);
     forceNodes(force, graph);    
